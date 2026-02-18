@@ -1728,6 +1728,7 @@ namespace MailArchiver.Controllers
             var exportJobs = new List<AccountExportJob>();
             var selectedEmailsExportJobs = new List<SelectedEmailsExportJob>();
             var emlImportJobs = new List<EmlImportJob>();
+            var accountImportJobs = new List<AccountImportJob>();
 
             if (_batchRestoreService != null)
             {
@@ -1823,12 +1824,31 @@ namespace MailArchiver.Controllers
                 // Ignore if service not available
             }
 
+            // Account Import Jobs
+            try
+            {
+                var accountImportService = HttpContext.RequestServices.GetService<IAccountImportService>();
+                if (accountImportService != null)
+                {
+                    accountImportJobs = accountImportService.GetAllJobs()
+                        .OrderByDescending(j => j.Status == AccountImportJobStatus.Running || j.Status == AccountImportJobStatus.Queued)
+                        .ThenByDescending(j => j.Created)
+                        .Take(20)
+                        .ToList();
+                }
+            }
+            catch
+            {
+                // Ignore if service not available
+            }
+
             ViewBag.BatchJobs = batchJobs;
             ViewBag.SyncJobs = syncJobs;
             ViewBag.MBoxJobs = mboxJobs;
             ViewBag.ExportJobs = exportJobs;
             ViewBag.SelectedEmailsExportJobs = selectedEmailsExportJobs;
             ViewBag.EmlImportJobs = emlImportJobs;
+            ViewBag.AccountImportJobs = accountImportJobs;
 
             return View(batchJobs);
         }
