@@ -565,14 +565,15 @@ namespace MailArchiver.Services
         /// </summary>
         private static bool IsLookalikeDomain(string host)
         {
-            // Common character substitutions used in typosquatting
+            // Common character substitutions used in typosquatting.
+            // Homoglyph attacks use visually similar characters: l↔1↔I, o↔0, rn↔m, etc.
             (string Original, string[] Fakes)[] brandVariants =
             [
                 ("paypal", ["paypa1", "paypai", "paypaI", "paipal", "paypol", "payp4l", "paypal-"]),
                 ("apple", ["app1e", "appie", "appIe", "aple", "appl3", "apple-"]),
                 ("google", ["g00gle", "go0gle", "googie", "googIe", "gogle", "g0ogle", "google-"]),
                 ("microsoft", ["micr0soft", "microsft", "rnicrosoft", "mlcrosoft", "microsoft-"]),
-                ("amazon", ["amaz0n", "arnazon", "arnazon", "armazom", "amazon-"]),
+                ("amazon", ["amaz0n", "arnazon", "amazom", "armazom", "amazon-"]),
                 ("netflix", ["netf1ix", "netfllx", "netfl1x", "nettflix", "netflix-"]),
                 ("facebook", ["faceb00k", "facebo0k", "faceboak", "facebook-"]),
                 ("linkedin", ["1inkedin", "linkedln", "llnkedin", "linkedin-"]),
@@ -591,7 +592,7 @@ namespace MailArchiver.Services
                 // Check for brand name with suspicious TLD (e.g., paypal.xyz)
                 foreach (var tld in SuspiciousTlds)
                 {
-                    if (host.Equals(brand + tld.TrimStart('.'), StringComparison.OrdinalIgnoreCase) ||
+                    if (host.Equals(brand + "." + tld.TrimStart('.'), StringComparison.OrdinalIgnoreCase) ||
                         host.EndsWith("." + brand + tld, StringComparison.OrdinalIgnoreCase))
                         return true;
                 }
@@ -752,7 +753,7 @@ namespace MailArchiver.Services
         private static partial Regex DmarcNoneRegex();
         [GeneratedRegex(@"https?://\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", RegexOptions.IgnoreCase)]
         private static partial Regex IpUrlRegex();
-        [GeneratedRegex(@"data:(text/html|application)", RegexOptions.IgnoreCase)]
+        [GeneratedRegex(@"data:(text/html|application/)", RegexOptions.IgnoreCase)]
         private static partial Regex DataUriRegex();
         [GeneratedRegex(@"https?://[^\s""'<>]+", RegexOptions.IgnoreCase)]
         private static partial Regex UrlRegex();
