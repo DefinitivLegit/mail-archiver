@@ -2521,4 +2521,36 @@
   <data name="SkippedLabel" xml:space="preserve">
     <value>Skipped</value>
   </data>
+  <data name="SyncAllStarted" xml:space="preserve">
+    <value>Quick sync started for {0} account(s). Syncs run in parallel.</value>
+    <comment>{0} - number of accounts</comment>
+  </data>
+  <data name="ResyncAllStarted" xml:space="preserve">
+    <value>Full resync started for {0} account(s). Resyncs run in parallel.</value>
+    <comment>{0} - number of accounts</comment>
+  </data>
+  <data name="NoAccountsToSync" xml:space="preserve">
+    <value>No eligible accounts found to sync.</value>
+  </data>
+  <data name="QuickSyncAll" xml:space="preserve">
+    <value>Quick Sync All</value>
+  </data>
+  <data name="FullResyncAll" xml:space="preserve">
+    <value>Full Resync All</value>
+  </data>
+  <data name="OnlyNeverSynced" xml:space="preserve">
+    <value>Only never synced</value>
+  </data>
+  <data name="SyncAllConfirm" xml:space="preserve">
+    <value>Are you sure you want to start a quick sync for all enabled accounts?</value>
+  </data>
+  <data name="ResyncAllConfirm" xml:space="preserve">
+    <value>Are you sure you want to start a full resync for all enabled accounts? This will re-download all emails.</value>
+  </data>
+  <data name="MaxParallelSyncs" xml:space="preserve">
+    <value>Max Parallel Syncs</value>
+  </data>
+  <data name="SyncAllActions" xml:space="preserve">
+    <value>Sync All</value>
+  </data>
 </root>

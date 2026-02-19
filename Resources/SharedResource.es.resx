@@ -2463,4 +2463,36 @@
   <data name="DetailsLabel" xml:space="preserve">
     <value>Detalles</value>
   </data>
+  <data name="SyncAllStarted" xml:space="preserve">
+    <value>Sincronización rápida iniciada para {0} cuenta(s). Las sincronizaciones se ejecutan en paralelo.</value>
+    <comment>{0} - number of accounts</comment>
+  </data>
+  <data name="ResyncAllStarted" xml:space="preserve">
+    <value>Resincronización completa iniciada para {0} cuenta(s). Las resincronizaciones se ejecutan en paralelo.</value>
+    <comment>{0} - number of accounts</comment>
+  </data>
+  <data name="NoAccountsToSync" xml:space="preserve">
+    <value>No se encontraron cuentas elegibles para sincronizar.</value>
+  </data>
+  <data name="QuickSyncAll" xml:space="preserve">
+    <value>Sincronización rápida de todas</value>
+  </data>
+  <data name="FullResyncAll" xml:space="preserve">
+    <value>Resincronización completa de todas</value>
+  </data>
+  <data name="OnlyNeverSynced" xml:space="preserve">
+    <value>Solo nunca sincronizadas</value>
+  </data>
+  <data name="SyncAllConfirm" xml:space="preserve">
+    <value>¿Está seguro de que desea iniciar una sincronización rápida para todas las cuentas habilitadas?</value>
+  </data>
+  <data name="ResyncAllConfirm" xml:space="preserve">
+    <value>¿Está seguro de que desea iniciar una resincronización completa para todas las cuentas habilitadas? Esto volverá a descargar todos los correos electrónicos.</value>
+  </data>
+  <data name="MaxParallelSyncs" xml:space="preserve">
+    <value>Máx. sincronizaciones paralelas</value>
+  </data>
+  <data name="SyncAllActions" xml:space="preserve">
+    <value>Sincronizar todas</value>
+  </data>
 </root>

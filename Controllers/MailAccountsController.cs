@@ -33,6 +33,7 @@ namespace MailArchiver.Controllers
     private readonly IAccessLogService _accessLogService;
     private readonly IMailAccountDeletionService _mailAccountDeletionService;
     private readonly IAccountImportService _accountImportService;
+    private readonly MailSyncOptions _mailSyncOptions;
 
     public MailAccountsController(
         MailArchiverDbContext context,
@@ -50,7 +51,8 @@ namespace MailArchiver.Controllers
         IExportService exportService,
         IAccessLogService accessLogService,
         IMailAccountDeletionService mailAccountDeletionService,
-        IAccountImportService accountImportService)
+        IAccountImportService accountImportService,
+        IOptions<MailSyncOptions> mailSyncOptions)
     {
         _context = context;
         _emailCoreService = emailCoreService;
@@ -68,6 +70,7 @@ namespace MailArchiver.Controllers
         _accessLogService = accessLogService;
         _mailAccountDeletionService = mailAccountDeletionService;
         _accountImportService = accountImportService;
+        _mailSyncOptions = mailSyncOptions.Value;
     }
 
         private async Task<bool> HasAccessToAccountAsync(int accountId)
@@ -887,7 +890,180 @@ var model = new MailAccountViewModel
             return RedirectToAction(nameof(Details), new { id });
         }
 
-        // POST: MailAccounts/MoveAllEmails/5
+        // POST: MailAccounts/SyncAll
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SyncAll(bool onlyNeverSynced = false)
+        {
+            var authService = HttpContext.RequestServices.GetService<MailArchiver.Services.IAuthenticationService>();
+            var isAdmin = authService.IsCurrentUserAdmin(HttpContext);
+            if (!isAdmin)
+            {
+                return NotFound();
+            }
+
+            var accounts = await _context.MailAccounts
+                .AsNoTracking()
+                .Where(a => a.IsEnabled && a.Provider != ProviderType.IMPORT)
+                .ToListAsync();
+
+            if (onlyNeverSynced)
+            {
+                accounts = accounts.Where(a => a.LastSync == default).ToList();
+            }
+
+            if (!accounts.Any())
+            {
+                TempData["ErrorMessage"] = _localizer["NoAccountsToSync"].Value;
+                return RedirectToAction(nameof(Index));
+            }
+
+            var maxParallel = _mailSyncOptions.MaxParallelSyncs;
+            var semaphore = new SemaphoreSlim(maxParallel);
+
+            var tasks = accounts.Select(account => Task.Run(async () =>
+            {
+                await semaphore.WaitAsync();
+                try
+                {
+                    using var scope = _serviceScopeFactory.CreateScope();
+                    var syncJobService = scope.ServiceProvider.GetRequiredService<ISyncJobService>();
+                    var dbContext = scope.ServiceProvider.GetRequiredService<MailArchiverDbContext>();
+
+                    var freshAccount = await dbContext.MailAccounts
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(a => a.Id == account.Id);
+                    if (freshAccount == null) return;
+
+                    string? jobId;
+                    try
+                    {
+                        jobId = await syncJobService.StartSyncAsync(freshAccount.Id, freshAccount.Name, freshAccount.LastSync);
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        _logger.LogDebug(ex, "Skipping SyncAll for account {AccountName}: sync already running", freshAccount.Name);
+                        return;
+                    }
+                    if (jobId == null) return;
+
+                    try
+                    {
+                        if (freshAccount.Provider == ProviderType.M365)
+                        {
+                            var graphService = scope.ServiceProvider.GetRequiredService<IGraphEmailService>();
+                            await graphService.SyncMailAccountAsync(freshAccount, jobId);
+                        }
+                        else
+                        {
+                            var imapService = scope.ServiceProvider.GetRequiredService<MailArchiver.Services.Providers.ImapEmailService>();
+                            await imapService.SyncMailAccountAsync(freshAccount, jobId);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error during SyncAll for account {AccountName}: {Message}", freshAccount.Name, ex.Message);
+                        syncJobService.CompleteJob(jobId, false, ex.Message);
+                    }
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            })).ToArray();
+
+            // Fire-and-forget the parallel sync tasks
+            _ = Task.Run(async () =>
+            {
+                try { await Task.WhenAll(tasks); }
+                catch (Exception ex) { _logger.LogError(ex, "Error in SyncAll batch: {Message}", ex.Message); }
+            });
+
+            // Log the action
+            var currentUsername = authService.GetCurrentUserDisplayName(HttpContext);
+            if (!string.IsNullOrEmpty(currentUsername))
+            {
+                await _accessLogService.LogAccessAsync(currentUsername, AccessLogType.Account,
+                    searchParameters: $"Started quick sync for {accounts.Count} accounts (onlyNeverSynced={onlyNeverSynced})");
+            }
+
+            TempData["SuccessMessage"] = string.Format(_localizer["SyncAllStarted"].Value, accounts.Count);
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: MailAccounts/ResyncAll
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResyncAll(bool onlyNeverSynced = false)
+        {
+            var authService = HttpContext.RequestServices.GetService<MailArchiver.Services.IAuthenticationService>();
+            var isAdmin = authService.IsCurrentUserAdmin(HttpContext);
+            if (!isAdmin)
+            {
+                return NotFound();
+            }
+
+            var accounts = await _context.MailAccounts
+                .AsNoTracking()
+                .Where(a => a.IsEnabled && a.Provider != ProviderType.IMPORT)
+                .ToListAsync();
+
+            if (onlyNeverSynced)
+            {
+                accounts = accounts.Where(a => a.LastSync == default).ToList();
+            }
+
+            if (!accounts.Any())
+            {
+                TempData["ErrorMessage"] = _localizer["NoAccountsToSync"].Value;
+                return RedirectToAction(nameof(Index));
+            }
+
+            var maxParallel = _mailSyncOptions.MaxParallelSyncs;
+            var semaphore = new SemaphoreSlim(maxParallel);
+
+            var tasks = accounts.Select(account => Task.Run(async () =>
+            {
+                await semaphore.WaitAsync();
+                try
+                {
+                    using var scope = _serviceScopeFactory.CreateScope();
+                    var providerFactory = scope.ServiceProvider.GetRequiredService<MailArchiver.Services.Factories.ProviderEmailServiceFactory>();
+
+                    try
+                    {
+                        var provider = await providerFactory.GetServiceForAccountAsync(account.Id);
+                        await provider.ResyncAccountAsync(account.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error during ResyncAll for account {AccountName}: {Message}", account.Name, ex.Message);
+                    }
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            })).ToArray();
+
+            // Fire-and-forget the parallel resync tasks
+            _ = Task.Run(async () =>
+            {
+                try { await Task.WhenAll(tasks); }
+                catch (Exception ex) { _logger.LogError(ex, "Error in ResyncAll batch: {Message}", ex.Message); }
+            });
+
+            // Log the action
+            var currentUsername = authService.GetCurrentUserDisplayName(HttpContext);
+            if (!string.IsNullOrEmpty(currentUsername))
+            {
+                await _accessLogService.LogAccessAsync(currentUsername, AccessLogType.Account,
+                    searchParameters: $"Started full resync for {accounts.Count} accounts (onlyNeverSynced={onlyNeverSynced})");
+            }
+
+            TempData["SuccessMessage"] = string.Format(_localizer["ResyncAllStarted"].Value, accounts.Count);
+            return RedirectToAction(nameof(Index));
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MoveAllEmails(int id)

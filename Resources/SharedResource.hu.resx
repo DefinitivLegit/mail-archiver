@@ -2456,4 +2456,36 @@
   <data name="DetailsLabel" xml:space="preserve">
     <value>Részletek</value>
   </data>
+  <data name="SyncAllStarted" xml:space="preserve">
+    <value>Gyors szinkronizálás elindítva {0} fiók számára. A szinkronizálások párhuzamosan futnak.</value>
+    <comment>{0} - number of accounts</comment>
+  </data>
+  <data name="ResyncAllStarted" xml:space="preserve">
+    <value>Teljes újraszinkronizálás elindítva {0} fiók számára. Az újraszinkronizálások párhuzamosan futnak.</value>
+    <comment>{0} - number of accounts</comment>
+  </data>
+  <data name="NoAccountsToSync" xml:space="preserve">
+    <value>Nem található szinkronizálásra alkalmas fiók.</value>
+  </data>
+  <data name="QuickSyncAll" xml:space="preserve">
+    <value>Összes gyors szinkronizálása</value>
+  </data>
+  <data name="FullResyncAll" xml:space="preserve">
+    <value>Összes teljes újraszinkronizálása</value>
+  </data>
+  <data name="OnlyNeverSynced" xml:space="preserve">
+    <value>Csak soha nem szinkronizáltak</value>
+  </data>
+  <data name="SyncAllConfirm" xml:space="preserve">
+    <value>Biztosan el szeretné indítani a gyors szinkronizálást az összes engedélyezett fiókhoz?</value>
+  </data>
+  <data name="ResyncAllConfirm" xml:space="preserve">
+    <value>Biztosan el szeretné indítani a teljes újraszinkronizálást az összes engedélyezett fiókhoz? Ez az összes e-mail újbóli letöltésével jár.</value>
+  </data>
+  <data name="MaxParallelSyncs" xml:space="preserve">
+    <value>Max. párhuzamos szinkronizálások</value>
+  </data>
+  <data name="SyncAllActions" xml:space="preserve">
+    <value>Összes szinkronizálása</value>
+  </data>
 </root>
