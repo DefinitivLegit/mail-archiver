@@ -670,8 +670,8 @@ body {
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   box-shadow: var(--card-shadow);
-  border-left: 4px solid var(--primary-color);
   border: var(--glass-border);
+  border-left: 4px solid var(--primary-color);
   color: var(--text-color);
 }
 
