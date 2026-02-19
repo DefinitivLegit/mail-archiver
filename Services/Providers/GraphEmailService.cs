@@ -30,6 +30,7 @@ namespace MailArchiver.Services.Providers
         private readonly MailSyncOptions _mailSyncOptions;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly MailArchiver.Services.Core.EmailCoreService _coreService;
+        private readonly FraudDetectionService _fraudDetectionService;
 
         public GraphEmailService(
             MailArchiverDbContext context,
@@ -38,7 +39,8 @@ namespace MailArchiver.Services.Providers
             IOptions<BatchOperationOptions> batchOptions,
             IOptions<MailSyncOptions> mailSyncOptions,
             DateTimeHelper dateTimeHelper,
-            MailArchiver.Services.Core.EmailCoreService coreService)
+            MailArchiver.Services.Core.EmailCoreService coreService,
+            FraudDetectionService fraudDetectionService)
         {
             _context = context;
             _logger = logger;
@@ -47,6 +49,7 @@ namespace MailArchiver.Services.Providers
             _mailSyncOptions = mailSyncOptions.Value;
             _dateTimeHelper = dateTimeHelper;
             _coreService = coreService;
+            _fraudDetectionService = fraudDetectionService;
         }
 
 /// <summary>
@@ -590,7 +593,8 @@ private async Task<GraphServiceClient> CreateGraphClientAsync(MailAccount accoun
                                             requestConfiguration.QueryParameters.Select = new string[] 
                                             { 
                                                 "id", "internetMessageId", "subject", "from", "toRecipients", "ccRecipients", "bccRecipients",
-                                                "sentDateTime", "receivedDateTime", "hasAttachments", "body", "bodyPreview", "lastModifiedDateTime"
+                                                "sentDateTime", "receivedDateTime", "hasAttachments", "body", "bodyPreview", "lastModifiedDateTime",
+                                                "internetMessageHeaders"
                                             };
                                         });
                                     }
@@ -714,7 +718,8 @@ private async Task<GraphServiceClient> CreateGraphClientAsync(MailAccount accoun
                                                 requestConfiguration.QueryParameters.Select = new string[] 
                                                 { 
                                                     "id", "internetMessageId", "subject", "from", "toRecipients", "ccRecipients", "bccRecipients",
-                                                    "sentDateTime", "receivedDateTime", "hasAttachments", "body", "bodyPreview", "lastModifiedDateTime"
+                                                    "sentDateTime", "receivedDateTime", "hasAttachments", "body", "bodyPreview", "lastModifiedDateTime",
+                                                    "internetMessageHeaders"
                                                 };
                                             });
                                         }
@@ -996,6 +1001,9 @@ private async Task<GraphServiceClient> CreateGraphClientAsync(MailAccount accoun
                 // Additionally check if the folder is a drafts folder to exclude it from outgoing emails
                 bool isDraftsFolder = IsDraftsFolder(folderName);
 
+                // Extract raw headers from Graph API internet message headers
+                var rawHeaders = ExtractGraphRawHeaders(message);
+
                 var archivedEmail = new ArchivedEmail
                 {
                     MailAccountId = account.Id,
@@ -1016,8 +1024,23 @@ private async Task<GraphServiceClient> CreateGraphClientAsync(MailAccount accoun
                     BodyUntruncatedText = !string.IsNullOrEmpty(originalTextBody) && originalTextBody != body ? originalTextBody : null,
                     BodyUntruncatedHtml = !string.IsNullOrEmpty(originalHtmlBody) && originalHtmlBody != htmlBody ? originalHtmlBody : null,
                     FolderName = cleanFolderName,
+                    RawHeaders = rawHeaders,
                     Attachments = new List<EmailAttachment>() // Initialize collection for hash calculation
                 };
+
+                // Fraud detection: classify the email
+                try
+                {
+                    var (fraudClassification, fraudDetails) = _fraudDetectionService.AnalyzeEmail(from, subject, body, rawHeaders);
+                    archivedEmail.FraudStatus = fraudClassification;
+                    archivedEmail.FraudDetails = fraudDetails;
+                }
+                catch (Exception fraudEx)
+                {
+                    _logger.LogWarning(fraudEx, "Fraud detection failed for Graph API email from {From}, defaulting to Normal classification", from);
+                    archivedEmail.FraudStatus = FraudClassification.Normal;
+                    archivedEmail.FraudDetails = null;
+                }
 
                 _context.ArchivedEmails.Add(archivedEmail);
                 await _context.SaveChangesAsync();
@@ -1040,6 +1063,8 @@ private async Task<GraphServiceClient> CreateGraphClientAsync(MailAccount accoun
             {
                 _logger.LogError(ex, "Error archiving Graph API email: Subject={Subject}, From={From}, Error={Message}",
                     message.Subject, message.From?.EmailAddress?.Address, ex.Message);
+                // Clear change tracker to prevent cascading failures from stuck entities
+                _context.ChangeTracker.Clear();
                 return false;
             }
         }
@@ -2012,6 +2037,46 @@ private async Task<GraphServiceClient> CreateGraphClientAsync(MailAccount accoun
             public int ProcessedEmails { get; set; }
             public int NewEmails { get; set; }
             public int FailedEmails { get; set; }
+        }
+
+        /// <summary>
+        /// Extracts raw headers from Graph API InternetMessageHeaders for forensic/compliance purposes.
+        /// </summary>
+        private string? ExtractGraphRawHeaders(Message message)
+        {
+            try
+            {
+                if (message.InternetMessageHeaders == null || !message.InternetMessageHeaders.Any())
+                {
+                    return null;
+                }
+
+                var headersBuilder = new StringBuilder();
+                foreach (var header in message.InternetMessageHeaders)
+                {
+                    headersBuilder.AppendLine($"{header.Name}: {header.Value}");
+                }
+
+                var rawHeaders = headersBuilder.ToString();
+
+                // Limit size to prevent excessive storage (max ~100KB for headers)
+                const int maxHeaderSize = 100_000;
+                if (rawHeaders.Length > maxHeaderSize)
+                {
+                    _logger.LogWarning("Raw headers exceed {MaxSize} bytes, truncating", maxHeaderSize);
+                    rawHeaders = rawHeaders.Substring(0, maxHeaderSize) + "\r\n[... Headers truncated due to size ...]";
+                }
+
+                _logger.LogDebug("Extracted {Count} raw headers ({Size} bytes) from Graph API email",
+                    message.InternetMessageHeaders.Count, rawHeaders.Length);
+
+                return rawHeaders;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to extract raw headers from Graph API email: {Message}", ex.Message);
+                return null;
+            }
         }
 
         private string CleanText(string text)
