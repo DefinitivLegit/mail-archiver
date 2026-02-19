@@ -13,6 +13,7 @@ namespace MailArchiver.Services
         private readonly ConcurrentDictionary<string, AccountImportJob> _allJobs = new();
         private readonly Timer _cleanupTimer;
         private CancellationTokenSource? _currentJobCancellation;
+        private readonly Random _random = new();
 
         public AccountImportService(IServiceProvider serviceProvider, ILogger<AccountImportService> logger)
         {
@@ -217,15 +218,14 @@ namespace MailArchiver.Services
                     // Wait 1-2 seconds between accounts as per requirement
                     if (job.ProcessedAccounts < job.TotalAccounts && !cancellationToken.IsCancellationRequested)
                     {
-                        var random = new Random();
-                        var delay = random.Next(1000, 2001);
+                        var delay = _random.Next(1000, 2001);
                         await Task.Delay(delay, cancellationToken);
                     }
                 }
 
                 if (job.Status != AccountImportJobStatus.Cancelled)
                 {
-                    job.Status = job.FailedCount > 0 || job.SkippedCount > 0
+                    job.Status = job.FailedCount > 0
                         ? AccountImportJobStatus.CompletedWithErrors
                         : AccountImportJobStatus.Completed;
                     job.Completed = DateTime.UtcNow;
