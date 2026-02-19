@@ -9,12 +9,13 @@
     <link rel="icon" type="image/svg" href="~/favicon.svg">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0f1117 0%, #1a1d2e 50%, #0f1117 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #e2e8f0;
         }
         .login-container {
             width: 100%;
@@ -22,22 +23,35 @@
             padding: 0 20px;
         }
         .login-card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            background: rgba(30, 34, 46, 0.7);
         }
         .card-body {
             padding: 2rem;
         }
         .card-footer {
             background: transparent;
-            border-top: 1px solid rgba(0, 0, 0, 0.1);
-            border-radius: 0 0 15px 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 0 0 16px 16px;
         }
         .form-control, .input-group-text {
             border-radius: 10px;
+            background-color: rgba(30, 34, 46, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+        }
+        .form-control::placeholder {
+            color: #94a3b8;
+        }
+        .form-control:focus {
+            background-color: rgba(30, 34, 46, 0.8);
+            border-color: #5b9ef4;
+            box-shadow: 0 0 0 0.2rem rgba(91, 158, 244, 0.2);
+            color: #e2e8f0;
         }
         .input-group .form-control {
             border-left: none;
@@ -45,15 +59,33 @@
             border-bottom-left-radius: 0;
         }
         .input-group-text {
-            background: #f8f9fa;
+            background: rgba(255, 255, 255, 0.04);
             border-right: none;
+            color: #94a3b8;
         }
         .btn-lg {
             border-radius: 10px;
             padding: 12px;
         }
+        .btn-primary {
+            background-color: #5b9ef4;
+            border-color: #5b9ef4;
+        }
+        .btn-primary:hover {
+            background-color: #4a8fe0;
+            border-color: #4a8fe0;
+        }
         .alert {
             border-radius: 10px;
+        }
+        .form-label {
+            color: #94a3b8;
+        }
+        a {
+            color: #63b3ed;
+        }
+        a:hover {
+            color: #90cdf4;
         }
         @@media (max-width: 480px) {
             .login-container {
