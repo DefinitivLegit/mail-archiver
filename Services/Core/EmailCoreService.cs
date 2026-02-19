@@ -84,7 +84,7 @@ namespace MailArchiver.Services.Core
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Optimized search failed, falling back to Entity Framework search");
-                return await SearchEmailsEFAsync(searchTerm, fromDate, toDate, accountId, folderName, isOutgoing, skip, take, allowedAccountIds);
+                return await SearchEmailsEFAsync(searchTerm, fromDate, toDate, accountId, folderName, isOutgoing, skip, take, allowedAccountIds, fraudFilter);
             }
         }
 
@@ -486,7 +486,8 @@ namespace MailArchiver.Services.Core
             bool? isOutgoing,
             int skip,
             int take,
-            List<int> allowedAccountIds = null)
+            List<int> allowedAccountIds = null,
+            string fraudFilter = null)
         {
             var baseQuery = _context.ArchivedEmails.AsNoTracking().AsQueryable();
 
@@ -516,6 +517,32 @@ namespace MailArchiver.Services.Core
 
             if (!string.IsNullOrEmpty(folderName))
                 baseQuery = baseQuery.Where(e => e.FolderName == folderName);
+
+            // Fraud status filtering
+            if (!string.IsNullOrEmpty(fraudFilter))
+            {
+                switch (fraudFilter)
+                {
+                    case "normal":
+                        baseQuery = baseQuery.Where(e => e.FraudStatus == FraudClassification.Normal);
+                        break;
+                    case "fraud":
+                        baseQuery = baseQuery.Where(e => e.FraudStatus == FraudClassification.Fraud);
+                        break;
+                    case "suspicious":
+                        baseQuery = baseQuery.Where(e => e.FraudStatus == FraudClassification.Suspicious);
+                        break;
+                    case "exclude_fraud":
+                        baseQuery = baseQuery.Where(e => e.FraudStatus != FraudClassification.Fraud);
+                        break;
+                    case "exclude_suspicious":
+                        baseQuery = baseQuery.Where(e => e.FraudStatus != FraudClassification.Suspicious);
+                        break;
+                    case "exclude_both":
+                        baseQuery = baseQuery.Where(e => e.FraudStatus == FraudClassification.Normal);
+                        break;
+                }
+            }
 
             IQueryable<ArchivedEmail> searchQuery = baseQuery;
             if (!string.IsNullOrEmpty(searchTerm))
@@ -1230,9 +1257,18 @@ namespace MailArchiver.Services.Core
                 };
 
                 // Fraud detection: classify the email
-                var (fraudClassification, fraudDetails) = _fraudDetectionService.AnalyzeEmail(from, subject, body, rawHeaders);
-                archivedEmail.FraudStatus = fraudClassification;
-                archivedEmail.FraudDetails = fraudDetails;
+                try
+                {
+                    var (fraudClassification, fraudDetails) = _fraudDetectionService.AnalyzeEmail(from, subject, body, rawHeaders);
+                    archivedEmail.FraudStatus = fraudClassification;
+                    archivedEmail.FraudDetails = fraudDetails;
+                }
+                catch (Exception fraudEx)
+                {
+                    _logger.LogWarning(fraudEx, "Fraud detection failed for email from {From}, defaulting to Normal classification", from);
+                    archivedEmail.FraudStatus = FraudClassification.Normal;
+                    archivedEmail.FraudDetails = null;
+                }
 
                 // CRITICAL: Prepare attachments BEFORE calculating hash
                 // This ensures the hash includes the attachment content

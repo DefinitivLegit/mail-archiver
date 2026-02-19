@@ -108,19 +108,27 @@ namespace MailArchiver.Services
             var reasons = new List<string>();
 
             // Method 1: Check for forged sender (fraud detection)
-            var fraudReasons = CheckForgedSender(from, rawHeaders);
-            if (fraudReasons.Any())
+            var (forgeryReasons, authFailReasons) = CheckForgedSender(from, rawHeaders);
+
+            // Method 2: Check for suspicious content
+            var suspiciousReasons = CheckSuspiciousContent(from, subject, body);
+
+            // Classification logic:
+            // Fraud = domain forgery indicators (Return-Path/envelope mismatch) combined with auth failures
+            // Suspicious = auth failures only, or suspicious content patterns
+            // Normal = everything else
+            if (forgeryReasons.Any())
             {
-                reasons.AddRange(fraudReasons);
+                reasons.AddRange(forgeryReasons);
+                reasons.AddRange(authFailReasons);
                 var details = string.Join("; ", reasons);
                 _logger.LogInformation("Email from {From} classified as Fraud: {Details}", from, details);
                 return (FraudClassification.Fraud, details);
             }
 
-            // Method 2: Check for suspicious content
-            var suspiciousReasons = CheckSuspiciousContent(from, subject, body);
-            if (suspiciousReasons.Any())
+            if (authFailReasons.Any() || suspiciousReasons.Any())
             {
+                reasons.AddRange(authFailReasons);
                 reasons.AddRange(suspiciousReasons);
                 var details = string.Join("; ", reasons);
                 _logger.LogInformation("Email from {From} classified as Suspicious: {Details}", from, details);
@@ -133,63 +141,65 @@ namespace MailArchiver.Services
         /// <summary>
         /// Method 1: Detects if the sender address is forged by comparing the From header
         /// with actual sending infrastructure information from raw headers.
+        /// Returns two lists: forgery indicators (domain mismatches) and authentication failures.
         /// </summary>
-        private List<string> CheckForgedSender(string from, string? rawHeaders)
+        private (List<string> ForgeryReasons, List<string> AuthFailReasons) CheckForgedSender(string from, string? rawHeaders)
         {
-            var reasons = new List<string>();
+            var forgeryReasons = new List<string>();
+            var authFailReasons = new List<string>();
 
             if (string.IsNullOrEmpty(from) || string.IsNullOrEmpty(rawHeaders))
-                return reasons;
+                return (forgeryReasons, authFailReasons);
 
             var fromDomain = ExtractDomain(from);
             if (string.IsNullOrEmpty(fromDomain))
-                return reasons;
+                return (forgeryReasons, authFailReasons);
 
-            // Check Return-Path mismatch
+            // Check Return-Path mismatch (strong forgery indicator)
             var returnPathDomain = ExtractHeaderDomain(rawHeaders, @"Return-Path:\s*<([^>]+)>");
             if (!string.IsNullOrEmpty(returnPathDomain) &&
                 !DomainsMatch(fromDomain, returnPathDomain))
             {
-                reasons.Add($"Return-Path domain mismatch: From={fromDomain}, Return-Path={returnPathDomain}");
+                forgeryReasons.Add($"Return-Path domain mismatch: From={fromDomain}, Return-Path={returnPathDomain}");
             }
 
-            // Check envelope-from / smtp.mailfrom in Authentication-Results
+            // Check envelope-from / smtp.mailfrom in Authentication-Results (strong forgery indicator)
             var smtpMailFromDomain = ExtractHeaderDomain(rawHeaders, @"smtp\.mailfrom=([^\s;]+)");
             if (!string.IsNullOrEmpty(smtpMailFromDomain) &&
                 !DomainsMatch(fromDomain, smtpMailFromDomain))
             {
-                reasons.Add($"SMTP envelope sender mismatch: From={fromDomain}, smtp.mailfrom={smtpMailFromDomain}");
+                forgeryReasons.Add($"SMTP envelope sender mismatch: From={fromDomain}, smtp.mailfrom={smtpMailFromDomain}");
             }
 
-            // Check SPF fail
-            if (Regex.IsMatch(rawHeaders, @"spf=(fail|softfail|temperror|permerror)", RegexOptions.IgnoreCase))
+            // Check SPF hard fail only (softfail is common for legitimate emails like mailing lists)
+            if (Regex.IsMatch(rawHeaders, @"spf=fail\b", RegexOptions.IgnoreCase))
             {
-                reasons.Add("SPF authentication failed");
+                authFailReasons.Add("SPF authentication failed");
             }
 
-            // Check DKIM fail
-            if (Regex.IsMatch(rawHeaders, @"dkim=(fail|temperror|permerror)", RegexOptions.IgnoreCase))
+            // Check DKIM hard fail only (temperror is a transient DNS issue, not fraud)
+            if (Regex.IsMatch(rawHeaders, @"dkim=fail\b", RegexOptions.IgnoreCase))
             {
-                reasons.Add("DKIM authentication failed");
+                authFailReasons.Add("DKIM authentication failed");
             }
 
-            // Check DMARC fail
-            if (Regex.IsMatch(rawHeaders, @"dmarc=(fail|temperror|permerror)", RegexOptions.IgnoreCase))
+            // Check DMARC hard fail only
+            if (Regex.IsMatch(rawHeaders, @"dmarc=fail\b", RegexOptions.IgnoreCase))
             {
-                reasons.Add("DMARC authentication failed");
+                authFailReasons.Add("DMARC authentication failed");
             }
 
             // Check if From claims to be from a high-value domain but headers indicate otherwise
             if (IsHighValueDomain(fromDomain))
             {
-                // For high-value domains, any Return-Path mismatch is very suspicious
-                if (reasons.Any())
+                // For high-value domains, any forgery indicator is very suspicious
+                if (forgeryReasons.Any())
                 {
-                    reasons.Insert(0, $"High-value domain impersonation detected ({fromDomain})");
+                    forgeryReasons.Insert(0, $"High-value domain impersonation detected ({fromDomain})");
                 }
             }
 
-            return reasons;
+            return (forgeryReasons, authFailReasons);
         }
 
         /// <summary>
