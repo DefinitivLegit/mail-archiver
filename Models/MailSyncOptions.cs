@@ -10,5 +10,7 @@ namespace MailArchiver.Models
         public int CommandTimeoutSeconds { get; set; } = 300;
         public bool AlwaysForceFullSync { get; set; } = false;
         public bool IgnoreSelfSignedCert { get; set; } = false;
+        public int MaxParallelSyncs { get; set; } = 5;
+        public bool SyncAllOnlyNeverSynced { get; set; } = false;
     }
 }
