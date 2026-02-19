@@ -920,8 +920,6 @@ var model = new MailAccountViewModel
 
             var maxParallel = _mailSyncOptions.MaxParallelSyncs;
             var semaphore = new SemaphoreSlim(maxParallel);
-            var syncedCount = 0;
-            var failedCount = 0;
 
             var tasks = accounts.Select(account => Task.Run(async () =>
             {
@@ -942,9 +940,9 @@ var model = new MailAccountViewModel
                     {
                         jobId = await syncJobService.StartSyncAsync(freshAccount.Id, freshAccount.Name, freshAccount.LastSync);
                     }
-                    catch (InvalidOperationException)
+                    catch (InvalidOperationException ex)
                     {
-                        // Already running
+                        _logger.LogDebug(ex, "Skipping SyncAll for account {AccountName}: sync already running", freshAccount.Name);
                         return;
                     }
                     if (jobId == null) return;
@@ -961,13 +959,11 @@ var model = new MailAccountViewModel
                             var imapService = scope.ServiceProvider.GetRequiredService<MailArchiver.Services.Providers.ImapEmailService>();
                             await imapService.SyncMailAccountAsync(freshAccount, jobId);
                         }
-                        Interlocked.Increment(ref syncedCount);
                     }
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Error during SyncAll for account {AccountName}: {Message}", freshAccount.Name, ex.Message);
                         syncJobService.CompleteJob(jobId, false, ex.Message);
-                        Interlocked.Increment(ref failedCount);
                     }
                 }
                 finally
