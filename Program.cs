@@ -261,7 +261,8 @@ builder.Services.AddScoped<IGraphEmailService, GraphEmailService>(provider =>
         provider.GetRequiredService<IOptions<BatchOperationOptions>>(),
         provider.GetRequiredService<IOptions<MailSyncOptions>>(),
         provider.GetRequiredService<MailArchiver.Utilities.DateTimeHelper>(),
-        provider.GetRequiredService<MailArchiver.Services.Core.EmailCoreService>()
+        provider.GetRequiredService<MailArchiver.Services.Core.EmailCoreService>(),
+        provider.GetRequiredService<MailArchiver.Services.FraudDetectionService>()
     ));
 // Register GraphEmailService also for IProviderEmailService
 builder.Services.AddScoped<MailArchiver.Services.Providers.IProviderEmailService>(provider => 

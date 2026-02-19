@@ -1345,6 +1345,9 @@ namespace MailArchiver.Services.Core
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error saving archived email to database: {Subject}, {Message}", subject, ex.Message);
+                    // Detach the failed entity from the change tracker to prevent cascading failures
+                    // Without this, the failed entity stays in Added state and all subsequent SaveChangesAsync calls also fail
+                    _context.ChangeTracker.Clear();
                     return false;
                 }
             }
@@ -1352,6 +1355,8 @@ namespace MailArchiver.Services.Core
             {
                 _logger.LogError(ex, "Error archiving email: Subject={Subject}, From={From}, Error={Message}",
                     message.Subject, message.From, ex.Message);
+                // Clear change tracker to prevent cascading failures from stuck entities
+                _context.ChangeTracker.Clear();
                 return false;
             }
         }
