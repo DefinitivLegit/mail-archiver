@@ -308,6 +308,11 @@ builder.Services.AddHostedService<EmailDeletionService>(provider => provider.Get
 
 builder.Services.AddHostedService<MailSyncBackgroundService>();
 
+// Register AccountImportService as singleton and hosted service - MUST be the same instance
+builder.Services.AddSingleton<AccountImportService>();
+builder.Services.AddSingleton<IAccountImportService>(provider => provider.GetRequiredService<AccountImportService>());
+builder.Services.AddHostedService<AccountImportService>(provider => provider.GetRequiredService<AccountImportService>());
+
 // Register DatabaseMaintenanceService as singleton and hosted service - MUST be the same instance
 builder.Services.AddSingleton<DatabaseMaintenanceService>();
 builder.Services.AddSingleton<IDatabaseMaintenanceService>(provider => provider.GetRequiredService<DatabaseMaintenanceService>());

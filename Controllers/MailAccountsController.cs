@@ -32,6 +32,7 @@ namespace MailArchiver.Controllers
     private readonly IExportService _exportService;
     private readonly IAccessLogService _accessLogService;
     private readonly IMailAccountDeletionService _mailAccountDeletionService;
+    private readonly IAccountImportService _accountImportService;
 
     public MailAccountsController(
         MailArchiverDbContext context,
@@ -48,7 +49,8 @@ namespace MailArchiver.Controllers
         IServiceScopeFactory serviceScopeFactory,
         IExportService exportService,
         IAccessLogService accessLogService,
-        IMailAccountDeletionService mailAccountDeletionService)
+        IMailAccountDeletionService mailAccountDeletionService,
+        IAccountImportService accountImportService)
     {
         _context = context;
         _emailCoreService = emailCoreService;
@@ -65,6 +67,7 @@ namespace MailArchiver.Controllers
         _exportService = exportService;
         _accessLogService = accessLogService;
         _mailAccountDeletionService = mailAccountDeletionService;
+        _accountImportService = accountImportService;
     }
 
         private async Task<bool> HasAccessToAccountAsync(int accountId)
@@ -1720,6 +1723,115 @@ var model = new MailAccountViewModel
                 _logger.LogError(ex, "Error loading folders for account {AccountId}", accountId);
                 return Json(new List<string> { "INBOX" });
             }
+        }
+
+        // GET: MailAccounts/ImportAccounts
+        [HttpGet]
+        public IActionResult ImportAccounts()
+        {
+            return View();
+        }
+
+        // POST: MailAccounts/ImportAccounts
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ImportAccounts(string accountsJson)
+        {
+            if (string.IsNullOrWhiteSpace(accountsJson))
+            {
+                TempData["ErrorMessage"] = _localizer["AccountImportJsonRequired"].Value;
+                return View();
+            }
+
+            List<AccountImportEntry> entries;
+            try
+            {
+                entries = System.Text.Json.JsonSerializer.Deserialize<List<AccountImportEntry>>(accountsJson,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (entries == null || entries.Count == 0)
+                {
+                    TempData["ErrorMessage"] = _localizer["AccountImportEmptyList"].Value;
+                    return View();
+                }
+
+                // Validate entries
+                foreach (var entry in entries)
+                {
+                    if (string.IsNullOrWhiteSpace(entry.Email) || string.IsNullOrWhiteSpace(entry.Password) ||
+                        string.IsNullOrWhiteSpace(entry.Server) || entry.Port <= 0 || entry.Port > 65535)
+                    {
+                        TempData["ErrorMessage"] = _localizer["AccountImportInvalidEntry", entry.Email ?? "unknown"].Value;
+                        return View();
+                    }
+                }
+            }
+            catch (System.Text.Json.JsonException ex)
+            {
+                _logger.LogWarning(ex, "Invalid JSON provided for account import");
+                TempData["ErrorMessage"] = _localizer["AccountImportInvalidJson"].Value;
+                return View();
+            }
+
+            var authService = HttpContext.RequestServices.GetService<MailArchiver.Services.IAuthenticationService>();
+            var currentUsername = authService?.GetCurrentUserDisplayName(HttpContext) ?? "System";
+
+            var job = new AccountImportJob
+            {
+                UserId = currentUsername,
+                TotalAccounts = entries.Count,
+                Accounts = entries
+            };
+
+            var jobId = _accountImportService.QueueImport(job);
+
+            await _accessLogService.LogAccessAsync(currentUsername, AccessLogType.Account,
+                searchParameters: $"Started account import job with {entries.Count} accounts");
+
+            _logger.LogInformation("Account import job {JobId} queued by {User} with {Count} accounts",
+                jobId, currentUsername, entries.Count);
+
+            return RedirectToAction(nameof(AccountImportStatus), new { jobId });
+        }
+
+        // GET: MailAccounts/AccountImportStatus
+        [HttpGet]
+        public IActionResult AccountImportStatus(string jobId)
+        {
+            if (string.IsNullOrEmpty(jobId))
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            var job = _accountImportService.GetJob(jobId);
+            if (job == null)
+            {
+                TempData["ErrorMessage"] = _localizer["AccountImportJobNotFound"].Value;
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(job);
+        }
+
+        // POST: MailAccounts/CancelAccountImport
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult CancelAccountImport(string jobId)
+        {
+            if (!string.IsNullOrEmpty(jobId))
+            {
+                var result = _accountImportService.CancelJob(jobId);
+                if (result)
+                {
+                    TempData["SuccessMessage"] = _localizer["AccountImportCancelled"].Value;
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = _localizer["AccountImportCancelError"].Value;
+                }
+            }
+
+            return RedirectToAction(nameof(AccountImportStatus), new { jobId });
         }
     }
 }

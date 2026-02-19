@@ -1,0 +1,102 @@
+@inject Microsoft.Extensions.Localization.IStringLocalizer<MailArchiver.SharedResource> Localizer
+@{
+    ViewData["Title"] = Localizer["ImportAccountsTitle"];
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>@Localizer["ImportAccountsTitle"]</h1>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> @Localizer["BackToAccounts"]
+        </a>
+    </div>
+
+    <div class="alert alert-info mb-4">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        <strong>@Localizer["AccountImportInformation"]</strong>
+        <ul class="mb-0 mt-2">
+            <li>@Localizer["AccountImportFormatInfo"]</li>
+            <li>@Localizer["AccountImportDuplicateInfo"]</li>
+            <li>@Localizer["AccountImportBackgroundInfo"]</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">@Localizer["AccountImportSettings"]</h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="ImportAccounts" method="post" id="accountImportForm">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-4">
+                    <label for="accountsJson" class="form-label">@Localizer["AccountImportJsonLabel"]</label>
+                    <textarea name="accountsJson" id="accountsJson" class="form-control font-monospace" rows="15" placeholder='[
+  {
+    "email": "user@example.com",
+    "password": "secretpass",
+    "server": "imap.example.com",
+    "port": 993
+  }
+]'></textarea>
+                    <div class="form-text">@Localizer["AccountImportJsonHelp"]</div>
+                </div>
+
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <h6 class="card-title">@Localizer["AccountImportExampleFormat"]</h6>
+                        <pre class="mb-0"><code>[
+  {
+    "email": "user@example.com",
+    "password": "secretpass",
+    "server": "imap.example.com",
+    "port": 993
+  },
+  {
+    "email": "user2@example.com",
+    "password": "pass123",
+    "server": "pop.example.com",
+    "port": 995
+  }
+]</code></pre>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" id="importBtn">
+                        <i class="bi bi-upload"></i> @Localizer["StartImport"]
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">@Localizer["Cancel"]</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('accountImportForm').addEventListener('submit', function(e) {
+            var jsonText = document.getElementById('accountsJson').value.trim();
+            if (!jsonText) {
+                e.preventDefault();
+                alert('@Localizer["AccountImportJsonRequired"]');
+                return;
+            }
+            try {
+                var parsed = JSON.parse(jsonText);
+                if (!Array.isArray(parsed) || parsed.length === 0) {
+                    e.preventDefault();
+                    alert('@Localizer["AccountImportEmptyList"]');
+                    return;
+                }
+            } catch (ex) {
+                e.preventDefault();
+                alert('@Localizer["AccountImportInvalidJson"]');
+                return;
+            }
+            var btn = document.getElementById('importBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> @Localizer["StartingImport"]';
+        });
+    </script>
+}

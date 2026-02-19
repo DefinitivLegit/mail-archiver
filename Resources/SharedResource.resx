@@ -2449,4 +2449,76 @@
   <data name="ManualSyncTooltip" xml:space="preserve">
     <value>Manual sync - account is disabled for automatic synchronization</value>
   </data>
+  <data name="ImportAccounts" xml:space="preserve">
+    <value>Import Accounts</value>
+  </data>
+  <data name="ImportAccountsTitle" xml:space="preserve">
+    <value>Import Accounts</value>
+  </data>
+  <data name="AccountImportInformation" xml:space="preserve">
+    <value>Account Import Information:</value>
+  </data>
+  <data name="AccountImportFormatInfo" xml:space="preserve">
+    <value>Paste a JSON array of accounts with email, password, server, and port fields.</value>
+  </data>
+  <data name="AccountImportDuplicateInfo" xml:space="preserve">
+    <value>Accounts with an email address that already exists will be skipped.</value>
+  </data>
+  <data name="AccountImportBackgroundInfo" xml:space="preserve">
+    <value>The import runs as a background job, adding accounts one by one with a short delay between each.</value>
+  </data>
+  <data name="AccountImportSettings" xml:space="preserve">
+    <value>Account Import Settings</value>
+  </data>
+  <data name="AccountImportJsonLabel" xml:space="preserve">
+    <value>Accounts JSON</value>
+  </data>
+  <data name="AccountImportJsonHelp" xml:space="preserve">
+    <value>Paste a JSON array of account objects. Each object must have: email, password, server, and port.</value>
+  </data>
+  <data name="AccountImportExampleFormat" xml:space="preserve">
+    <value>Example Format</value>
+  </data>
+  <data name="AccountImportJsonRequired" xml:space="preserve">
+    <value>Please provide the accounts JSON data.</value>
+  </data>
+  <data name="AccountImportEmptyList" xml:space="preserve">
+    <value>The JSON array is empty. Please provide at least one account.</value>
+  </data>
+  <data name="AccountImportInvalidJson" xml:space="preserve">
+    <value>The provided text is not valid JSON. Please check the format.</value>
+  </data>
+  <data name="AccountImportInvalidEntry" xml:space="preserve">
+    <value>Invalid account entry for '{0}'. Each account must have email, password, server, and a valid port (1-65535).</value>
+  </data>
+  <data name="AccountImportStatusTitle" xml:space="preserve">
+    <value>Account Import Status</value>
+  </data>
+  <data name="AccountImportJobNotFound" xml:space="preserve">
+    <value>Account import job not found.</value>
+  </data>
+  <data name="AccountImportCancelled" xml:space="preserve">
+    <value>Account import job has been cancelled.</value>
+  </data>
+  <data name="AccountImportCancelError" xml:space="preserve">
+    <value>Could not cancel the account import job.</value>
+  </data>
+  <data name="AccountImportSummary" xml:space="preserve">
+    <value>Import Summary</value>
+  </data>
+  <data name="AccountImportJobs" xml:space="preserve">
+    <value>Account Import Jobs</value>
+  </data>
+  <data name="AccountsLabel" xml:space="preserve">
+    <value>Accounts</value>
+  </data>
+  <data name="CurrentAccountLabel" xml:space="preserve">
+    <value>Current Account</value>
+  </data>
+  <data name="ImportMoreAccounts" xml:space="preserve">
+    <value>Import More Accounts</value>
+  </data>
+  <data name="SkippedLabel" xml:space="preserve">
+    <value>Skipped</value>
+  </data>
 </root>
