@@ -208,6 +208,21 @@ namespace MailArchiver.Data
             modelBuilder.Entity<ArchivedEmail>()
                 .Property(e => e.IsLocked)
                 .HasDefaultValue(false);
+
+            // Fraud detection fields
+            modelBuilder.Entity<ArchivedEmail>()
+                .Property(e => e.FraudStatus)
+                .HasConversion<int>()
+                .HasDefaultValue(FraudClassification.Normal);
+
+            modelBuilder.Entity<ArchivedEmail>()
+                .Property(e => e.FraudDetails)
+                .HasColumnType("text")
+                .IsRequired(false);
+
+            modelBuilder.Entity<ArchivedEmail>()
+                .HasIndex(e => e.FraudStatus)
+                .HasDatabaseName("IX_ArchivedEmails_FraudStatus");
         }
     }
 }

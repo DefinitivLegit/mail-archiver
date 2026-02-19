@@ -77,9 +77,21 @@
                             }
                         </select>
                     </div>
-                    <div class="col-12 col-md-6 @(Model.SelectedAccountId.HasValue ? "col-lg-1" : "col-lg-3") mb-3" id="directionFilterContainer">
+                    <div class="col-12 col-md-6 @(Model.SelectedAccountId.HasValue ? "col-lg-1" : "col-lg-2") mb-3" id="directionFilterContainer">
                         <label asp-for="IsOutgoing" class="form-label">@Localizer["Direction"]</label>
                         <select asp-for="IsOutgoing" asp-items="Model.DirectionOptions" class="form-select form-select-sm"></select>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-1 mb-3">
+                        <label asp-for="FraudFilter" class="form-label">@Localizer["FraudFilter"]</label>
+                        <select asp-for="FraudFilter" class="form-select form-select-sm">
+                            <option value="">@Localizer["AllEmails"]</option>
+                            <option value="normal">@Localizer["NormalOnly"]</option>
+                            <option value="fraud">@Localizer["FraudOnly"]</option>
+                            <option value="suspicious">@Localizer["SuspiciousOnly"]</option>
+                            <option value="exclude_fraud">@Localizer["ExcludeFraud"]</option>
+                            <option value="exclude_suspicious">@Localizer["ExcludeSuspicious"]</option>
+                            <option value="exclude_both">@Localizer["ExcludeBoth"]</option>
+                        </select>
                     </div>
                 </div>
                 <div class="row">
@@ -234,6 +246,7 @@
                                     SelectedAccountId = Model.SelectedAccountId,
                                     SelectedFolder = Model.SelectedFolder,
                                     IsOutgoing = Model.IsOutgoing,
+                                    FraudFilter = Model.FraudFilter,
                                     PageNumber = 1,
                                     PageSize = Model.PageSize,
                                     ShowSelectionControls = Model.ShowSelectionControls,
@@ -253,6 +266,7 @@
                                     SelectedAccountId = Model.SelectedAccountId,
                                     SelectedFolder = Model.SelectedFolder,
                                     IsOutgoing = Model.IsOutgoing,
+                                    FraudFilter = Model.FraudFilter,
                                     PageNumber = 1,
                                     PageSize = Model.PageSize,
                                     ShowSelectionControls = Model.ShowSelectionControls,
@@ -272,6 +286,7 @@
                                     SelectedAccountId = Model.SelectedAccountId,
                                     SelectedFolder = Model.SelectedFolder,
                                     IsOutgoing = Model.IsOutgoing,
+                                    FraudFilter = Model.FraudFilter,
                                     PageNumber = 1,
                                     PageSize = Model.PageSize,
                                     ShowSelectionControls = Model.ShowSelectionControls,
@@ -291,6 +306,7 @@
                                     SelectedAccountId = Model.SelectedAccountId,
                                     SelectedFolder = Model.SelectedFolder,
                                     IsOutgoing = Model.IsOutgoing,
+                                    FraudFilter = Model.FraudFilter,
                                     PageNumber = 1,
                                     PageSize = Model.PageSize,
                                     ShowSelectionControls = Model.ShowSelectionControls,
@@ -329,6 +345,14 @@
                                         else
                                         {
                                             <span class="badge bg-secondary">@Localizer["In"]</span>
+                                        }
+                                        @if (email.FraudStatus == MailArchiver.Models.FraudClassification.Fraud)
+                                        {
+                                            <span class="badge bg-danger" title="@email.FraudDetails"><i class="bi bi-exclamation-triangle-fill"></i> @Localizer["Fraud"]</span>
+                                        }
+                                        else if (email.FraudStatus == MailArchiver.Models.FraudClassification.Suspicious)
+                                        {
+                                            <span class="badge bg-warning text-dark" title="@email.FraudDetails"><i class="bi bi-exclamation-triangle"></i> @Localizer["Suspicious"]</span>
                                         }
                                         @email.Subject
                                     </td>
@@ -386,6 +410,14 @@
                                     {
                                         <i class="bi bi-paperclip text-warning ms-1"></i>
                                     }
+                                    @if (email.FraudStatus == MailArchiver.Models.FraudClassification.Fraud)
+                                    {
+                                        <span class="badge bg-danger ms-1"><i class="bi bi-exclamation-triangle-fill"></i> @Localizer["Fraud"]</span>
+                                    }
+                                    else if (email.FraudStatus == MailArchiver.Models.FraudClassification.Suspicious)
+                                    {
+                                        <span class="badge bg-warning text-dark ms-1"><i class="bi bi-exclamation-triangle"></i> @Localizer["Suspicious"]</span>
+                                    }
                                 </div>
                             </div>
                             <div class="email-card-meta">
@@ -421,6 +453,7 @@
                                     SelectedAccountId = Model.SelectedAccountId,
                                     SelectedFolder = Model.SelectedFolder,
                                     IsOutgoing = Model.IsOutgoing,
+                                    FraudFilter = Model.FraudFilter,
                                     PageNumber = Model.PageNumber - 1,
                                     PageSize = Model.PageSize,
                                     ShowSelectionControls = Model.ShowSelectionControls,
@@ -443,6 +476,7 @@
                                     SelectedAccountId = Model.SelectedAccountId,
                                     SelectedFolder = Model.SelectedFolder,
                                     IsOutgoing = Model.IsOutgoing,
+                                    FraudFilter = Model.FraudFilter,
                                     PageNumber = i,
                                     PageSize = Model.PageSize,
                                     ShowSelectionControls = Model.ShowSelectionControls,
@@ -461,6 +495,7 @@
                                     SelectedAccountId = Model.SelectedAccountId,
                                     SelectedFolder = Model.SelectedFolder,
                                     IsOutgoing = Model.IsOutgoing,
+                                    FraudFilter = Model.FraudFilter,
                                     PageNumber = Model.PageNumber + 1,
                                     PageSize = Model.PageSize,
                                     ShowSelectionControls = Model.ShowSelectionControls,

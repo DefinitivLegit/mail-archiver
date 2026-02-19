@@ -24,6 +24,10 @@ namespace MailArchiver.Models
         // Contains all headers including Received, Return-Path, X-Headers, etc.
         public string? RawHeaders { get; set; }
 
+        // Fraud detection fields
+        public FraudClassification FraudStatus { get; set; } = FraudClassification.Normal;
+        public string? FraudDetails { get; set; }
+
         // Compliance fields for integrity and immutability
         public string? ContentHash { get; set; }
         public DateTime? HashCreatedAt { get; set; }

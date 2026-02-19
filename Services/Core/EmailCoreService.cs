@@ -23,6 +23,7 @@ namespace MailArchiver.Services.Core
         private readonly ILogger<EmailCoreService> _logger;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly BatchOperationOptions _batchOptions;
+        private readonly FraudDetectionService _fraudDetectionService;
 
         // Constants for HTML truncation
         private static readonly string TruncationNotice = @"
@@ -44,12 +45,14 @@ namespace MailArchiver.Services.Core
             MailArchiverDbContext context,
             ILogger<EmailCoreService> logger,
             DateTimeHelper dateTimeHelper,
-            IOptions<BatchOperationOptions> batchOptions)
+            IOptions<BatchOperationOptions> batchOptions,
+            FraudDetectionService fraudDetectionService)
         {
             _context = context;
             _logger = logger;
             _dateTimeHelper = dateTimeHelper;
             _batchOptions = batchOptions.Value;
+            _fraudDetectionService = fraudDetectionService;
         }
 
         #region Search Methods
@@ -65,7 +68,8 @@ namespace MailArchiver.Services.Core
             int take,
             List<int> allowedAccountIds = null,
             string sortBy = "SentDate",
-            string sortOrder = "desc")
+            string sortOrder = "desc",
+            string fraudFilter = null)
         {
             var startTime = DateTime.UtcNow;
 
@@ -75,7 +79,7 @@ namespace MailArchiver.Services.Core
 
             try
             {
-                return await SearchEmailsOptimizedAsync(searchTerm, fromDate, toDate, accountId, folderName, isOutgoing, skip, take, allowedAccountIds, sortBy, sortOrder);
+                return await SearchEmailsOptimizedAsync(searchTerm, fromDate, toDate, accountId, folderName, isOutgoing, skip, take, allowedAccountIds, sortBy, sortOrder, fraudFilter);
             }
             catch (Exception ex)
             {
@@ -95,7 +99,8 @@ namespace MailArchiver.Services.Core
             int take,
             List<int> allowedAccountIds = null,
             string sortBy = "SentDate",
-            string sortOrder = "desc")
+            string sortOrder = "desc",
+            string fraudFilter = null)
         {
             var startTime = DateTime.UtcNow;
             var whereConditions = new List<string>();
@@ -238,6 +243,32 @@ namespace MailArchiver.Services.Core
                 paramCounter++;
             }
 
+            // Fraud status filtering
+            if (!string.IsNullOrEmpty(fraudFilter))
+            {
+                switch (fraudFilter)
+                {
+                    case "normal":
+                        whereConditions.Add($@"""FraudStatus"" = {(int)FraudClassification.Normal}");
+                        break;
+                    case "fraud":
+                        whereConditions.Add($@"""FraudStatus"" = {(int)FraudClassification.Fraud}");
+                        break;
+                    case "suspicious":
+                        whereConditions.Add($@"""FraudStatus"" = {(int)FraudClassification.Suspicious}");
+                        break;
+                    case "exclude_fraud":
+                        whereConditions.Add($@"""FraudStatus"" <> {(int)FraudClassification.Fraud}");
+                        break;
+                    case "exclude_suspicious":
+                        whereConditions.Add($@"""FraudStatus"" <> {(int)FraudClassification.Suspicious}");
+                        break;
+                    case "exclude_both":
+                        whereConditions.Add($@"""FraudStatus"" = {(int)FraudClassification.Normal}");
+                        break;
+                }
+            }
+
             var whereClause = whereConditions.Any() ? "WHERE " + string.Join(" AND ", whereConditions) : "";
 
             // Count query
@@ -256,6 +287,7 @@ namespace MailArchiver.Services.Core
                 SELECT e.""Id"", e.""MailAccountId"", e.""MessageId"", e.""Subject"", e.""Body"", e.""HtmlBody"",
                        e.""From"", e.""To"", e.""Cc"", e.""Bcc"", e.""SentDate"", e.""ReceivedDate"",
                        e.""IsOutgoing"", e.""HasAttachments"", e.""FolderName"", e.""IsLocked"",
+                       e.""FraudStatus"", e.""FraudDetails"",
                        ma.""Id"" as ""AccountId"", ma.""Name"" as ""AccountName"", ma.""EmailAddress"" as ""AccountEmail""
                 FROM mail_archiver.""ArchivedEmails"" e
                 INNER JOIN mail_archiver.""MailAccounts"" ma ON e.""MailAccountId"" = ma.""Id""
@@ -317,6 +349,8 @@ namespace MailArchiver.Services.Core
                     HasAttachments = reader.GetBoolean(reader.GetOrdinal("HasAttachments")),
                     FolderName = reader.IsDBNull(reader.GetOrdinal("FolderName")) ? "" : reader.GetString(reader.GetOrdinal("FolderName")),
                     IsLocked = reader.GetBoolean(reader.GetOrdinal("IsLocked")),
+                    FraudStatus = reader.IsDBNull(reader.GetOrdinal("FraudStatus")) ? FraudClassification.Normal : (FraudClassification)reader.GetInt32(reader.GetOrdinal("FraudStatus")),
+                    FraudDetails = reader.IsDBNull(reader.GetOrdinal("FraudDetails")) ? null : reader.GetString(reader.GetOrdinal("FraudDetails")),
                     MailAccount = new MailAccount
                     {
                         Id = reader.GetInt32(reader.GetOrdinal("AccountId")),
@@ -900,6 +934,11 @@ namespace MailArchiver.Services.Core
             model.TotalAccounts = await _context.MailAccounts.CountAsync();
             model.TotalAttachments = await _context.EmailAttachments.CountAsync();
 
+            // Fraud classification counts
+            model.FraudEmailCount = await _context.ArchivedEmails.CountAsync(e => e.FraudStatus == FraudClassification.Fraud);
+            model.SuspiciousEmailCount = await _context.ArchivedEmails.CountAsync(e => e.FraudStatus == FraudClassification.Suspicious);
+            model.NormalEmailCount = model.TotalEmails - model.FraudEmailCount - model.SuspiciousEmailCount;
+
             var totalDatabaseSizeBytes = await GetDatabaseSizeAsync();
             model.TotalStorageUsed = FormatFileSize(totalDatabaseSizeBytes);
 
@@ -1189,6 +1228,11 @@ namespace MailArchiver.Services.Core
                     RawHeaders = rawHeaders, // Store raw headers for forensic/compliance purposes
                     Attachments = new List<EmailAttachment>() // Initialize collection for hash calculation
                 };
+
+                // Fraud detection: classify the email
+                var (fraudClassification, fraudDetails) = _fraudDetectionService.AnalyzeEmail(from, subject, body, rawHeaders);
+                archivedEmail.FraudStatus = fraudClassification;
+                archivedEmail.FraudDetails = fraudDetails;
 
                 // CRITICAL: Prepare attachments BEFORE calculating hash
                 // This ensures the hash includes the attachment content

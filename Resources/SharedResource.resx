@@ -2553,4 +2553,52 @@
   <data name="SyncAllActions" xml:space="preserve">
     <value>Sync All</value>
   </data>
+  <data name="FraudFilter" xml:space="preserve">
+    <value>Safety</value>
+  </data>
+  <data name="AllEmails" xml:space="preserve">
+    <value>All Emails</value>
+  </data>
+  <data name="NormalOnly" xml:space="preserve">
+    <value>Normal Only</value>
+  </data>
+  <data name="FraudOnly" xml:space="preserve">
+    <value>Fraud Only</value>
+  </data>
+  <data name="SuspiciousOnly" xml:space="preserve">
+    <value>Suspicious Only</value>
+  </data>
+  <data name="ExcludeFraud" xml:space="preserve">
+    <value>Exclude Fraud</value>
+  </data>
+  <data name="ExcludeSuspicious" xml:space="preserve">
+    <value>Exclude Suspicious</value>
+  </data>
+  <data name="ExcludeBoth" xml:space="preserve">
+    <value>Exclude Fraud &amp; Suspicious</value>
+  </data>
+  <data name="Fraud" xml:space="preserve">
+    <value>Fraud</value>
+  </data>
+  <data name="Suspicious" xml:space="preserve">
+    <value>Suspicious</value>
+  </data>
+  <data name="Normal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="NormalEmails" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="FraudEmails" xml:space="preserve">
+    <value>Fraud</value>
+  </data>
+  <data name="SuspiciousEmails" xml:space="preserve">
+    <value>Suspicious</value>
+  </data>
+  <data name="EmailClassification" xml:space="preserve">
+    <value>Email Classification</value>
+  </data>
+  <data name="FraudDetails" xml:space="preserve">
+    <value>Fraud Details</value>
+  </data>
 </root>

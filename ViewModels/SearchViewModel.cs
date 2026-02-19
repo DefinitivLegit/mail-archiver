@@ -10,6 +10,7 @@ namespace MailArchiver.Models.ViewModels
         public int? SelectedAccountId { get; set; }
         public string SelectedFolder { get; set; }
         public bool? IsOutgoing { get; set; }
+        public string FraudFilter { get; set; } // empty/null = all, "normal", "fraud", "suspicious", "exclude_fraud", "exclude_suspicious", "exclude_both"
         public int PageNumber { get; set; } = 1;
         public int PageSize { get; set; } = 20;
         public string UserTimezone { get; set; } = "UTC";
