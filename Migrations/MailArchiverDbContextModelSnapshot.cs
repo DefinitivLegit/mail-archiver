@@ -121,6 +121,14 @@ namespace MailArchiver.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("FraudDetails")
+                        .HasColumnType("text");
+
+                    b.Property<int>("FraudStatus")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("From")
                         .IsRequired()
                         .HasColumnType("text");
@@ -170,6 +178,9 @@ namespace MailArchiver.Migrations
 
                     b.HasIndex("ContentHash")
                         .HasDatabaseName("IX_ArchivedEmails_ContentHash");
+
+                    b.HasIndex("FraudStatus")
+                        .HasDatabaseName("IX_ArchivedEmails_FraudStatus");
 
                     b.HasIndex("MailAccountId");
 
