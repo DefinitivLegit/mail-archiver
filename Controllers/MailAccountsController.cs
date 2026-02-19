@@ -137,6 +137,7 @@ namespace MailArchiver.Controllers
                 mailAccountsQuery = _context.MailAccounts.Where(ma => false); // Empty query
             }
 
+            var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             var accounts = await mailAccountsQuery
                 .Select(a => new MailAccountViewModel
                 {
@@ -153,6 +154,11 @@ namespace MailArchiver.Controllers
                     Provider = a.Provider
                 })
                 .ToListAsync();
+            foreach (var a in accounts)
+            {
+                if (a.LastSync.HasValue && a.LastSync.Value <= epoch)
+                    a.LastSync = null;
+            }
 
             _logger.LogInformation("Returning {Count} accounts for user {Username}", accounts.Count, currentUsername);
             return View(accounts);
@@ -176,6 +182,7 @@ namespace MailArchiver.Controllers
             // E-Mail-Anzahl abrufen
             var emailCount = await _emailCoreService.GetEmailCountByAccountAsync(id);
 
+var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 var model = new MailAccountViewModel
             {
                 Id = account.Id,
@@ -185,7 +192,7 @@ var model = new MailAccountViewModel
                 ImapPort = account.ImapPort,
                 Username = account.Username,
                 UseSSL = account.UseSSL,
-                LastSync = account.LastSync,
+                LastSync = account.LastSync <= epoch ? null : account.LastSync,
                 IsEnabled = account.IsEnabled,
                 DeleteAfterDays = account.DeleteAfterDays,
                 Provider = account.Provider,
@@ -330,6 +337,7 @@ var model = new MailAccountViewModel
                 return NotFound();
             }
 
+            var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             var model = new MailAccountViewModel
             {
                 Id = account.Id,
@@ -340,7 +348,7 @@ var model = new MailAccountViewModel
                 Username = account.Username,
                 UseSSL = account.UseSSL,
                 IsEnabled = account.IsEnabled,
-                LastSync = account.LastSync,
+                LastSync = account.LastSync <= epoch ? null : account.LastSync,
                 ExcludedFolders = account.ExcludedFolders,
                 DeleteAfterDays = account.DeleteAfterDays,
                 LocalRetentionDays = account.LocalRetentionDays,
@@ -909,7 +917,8 @@ var model = new MailAccountViewModel
 
             if (onlyNeverSynced)
             {
-                accounts = accounts.Where(a => a.LastSync == default).ToList();
+                var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                accounts = accounts.Where(a => a.LastSync == default || a.LastSync == epoch).ToList();
             }
 
             if (!accounts.Any())
@@ -1010,7 +1019,8 @@ var model = new MailAccountViewModel
 
             if (onlyNeverSynced)
             {
-                accounts = accounts.Where(a => a.LastSync == default).ToList();
+                var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                accounts = accounts.Where(a => a.LastSync == default || a.LastSync == epoch).ToList();
             }
 
             if (!accounts.Any())

@@ -841,6 +841,10 @@ a:hover {
   border-top: 1px solid var(--border-color) !important;
 }
 
+.dropdown-menu .form-check-label {
+  color: var(--text-color) !important;
+}
+
 /* Modals */
 .modal-content {
   background-color: rgba(30, 34, 46, 0.95);
