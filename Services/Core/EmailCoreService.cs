@@ -249,22 +249,22 @@ namespace MailArchiver.Services.Core
                 switch (fraudFilter)
                 {
                     case "normal":
-                        whereConditions.Add($@"""FraudStatus"" = 0");
+                        whereConditions.Add($@"""FraudStatus"" = {(int)FraudClassification.Normal}");
                         break;
                     case "fraud":
-                        whereConditions.Add($@"""FraudStatus"" = 2");
+                        whereConditions.Add($@"""FraudStatus"" = {(int)FraudClassification.Fraud}");
                         break;
                     case "suspicious":
-                        whereConditions.Add($@"""FraudStatus"" = 1");
+                        whereConditions.Add($@"""FraudStatus"" = {(int)FraudClassification.Suspicious}");
                         break;
                     case "exclude_fraud":
-                        whereConditions.Add($@"""FraudStatus"" <> 2");
+                        whereConditions.Add($@"""FraudStatus"" <> {(int)FraudClassification.Fraud}");
                         break;
                     case "exclude_suspicious":
-                        whereConditions.Add($@"""FraudStatus"" <> 1");
+                        whereConditions.Add($@"""FraudStatus"" <> {(int)FraudClassification.Suspicious}");
                         break;
                     case "exclude_both":
-                        whereConditions.Add($@"""FraudStatus"" = 0");
+                        whereConditions.Add($@"""FraudStatus"" = {(int)FraudClassification.Normal}");
                         break;
                 }
             }

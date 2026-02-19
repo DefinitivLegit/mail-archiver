@@ -85,12 +85,12 @@
                         <label asp-for="FraudFilter" class="form-label">@Localizer["FraudFilter"]</label>
                         <select asp-for="FraudFilter" class="form-select form-select-sm">
                             <option value="">@Localizer["AllEmails"]</option>
-                            <option value="normal" selected="@(Model.FraudFilter == "normal")">@Localizer["NormalOnly"]</option>
-                            <option value="fraud" selected="@(Model.FraudFilter == "fraud")">@Localizer["FraudOnly"]</option>
-                            <option value="suspicious" selected="@(Model.FraudFilter == "suspicious")">@Localizer["SuspiciousOnly"]</option>
-                            <option value="exclude_fraud" selected="@(Model.FraudFilter == "exclude_fraud")">@Localizer["ExcludeFraud"]</option>
-                            <option value="exclude_suspicious" selected="@(Model.FraudFilter == "exclude_suspicious")">@Localizer["ExcludeSuspicious"]</option>
-                            <option value="exclude_both" selected="@(Model.FraudFilter == "exclude_both")">@Localizer["ExcludeBoth"]</option>
+                            <option value="normal">@Localizer["NormalOnly"]</option>
+                            <option value="fraud">@Localizer["FraudOnly"]</option>
+                            <option value="suspicious">@Localizer["SuspiciousOnly"]</option>
+                            <option value="exclude_fraud">@Localizer["ExcludeFraud"]</option>
+                            <option value="exclude_suspicious">@Localizer["ExcludeSuspicious"]</option>
+                            <option value="exclude_both">@Localizer["ExcludeBoth"]</option>
                         </select>
                     </div>
                 </div>

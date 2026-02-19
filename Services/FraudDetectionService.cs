@@ -264,7 +264,7 @@ namespace MailArchiver.Services
             if (atIndex < 0 || atIndex >= email.Length - 1)
                 return null;
 
-            return email.Substring(atIndex + 1).Trim().ToLowerInvariant();
+            return email[(atIndex + 1)..].Trim().ToLowerInvariant();
         }
 
         private string? ExtractHeaderDomain(string rawHeaders, string pattern)
