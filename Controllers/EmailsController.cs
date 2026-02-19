@@ -213,7 +213,8 @@ namespace MailArchiver.Controllers
                 model.PageSize,
                 allowedAccountIds,
                 model.SortBy ?? "SentDate",
-                model.SortOrder ?? "desc");
+                model.SortOrder ?? "desc",
+                model.FraudFilter);
 
             model.SearchResults = emails;
             model.TotalResults = totalCount;

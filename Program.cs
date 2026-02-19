@@ -320,6 +320,7 @@ builder.Services.AddHostedService<DatabaseMaintenanceService>(provider => provid
 
 // Register AccessLogService
 builder.Services.AddScoped<IAccessLogService, AccessLogService>();
+builder.Services.AddScoped<MailArchiver.Services.FraudDetectionService>();
 
 // ====================
 // NEW: Provider-based Architecture Services

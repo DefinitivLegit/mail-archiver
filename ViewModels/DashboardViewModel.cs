@@ -6,6 +6,9 @@ namespace MailArchiver.Models.ViewModels
         public int TotalAccounts { get; set; }
         public int TotalAttachments { get; set; }
         public string TotalStorageUsed { get; set; } // Formatiert als MB/GB
+        public int NormalEmailCount { get; set; }
+        public int FraudEmailCount { get; set; }
+        public int SuspiciousEmailCount { get; set; }
         public List<AccountStatistics> EmailsPerAccount { get; set; }
         public List<EmailCountByPeriod> EmailsByMonth { get; set; }
         public List<EmailCountByAddress> TopSenders { get; set; }

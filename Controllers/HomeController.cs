@@ -97,6 +97,13 @@ namespace MailArchiver.Controllers
                     .Contains(a.ArchivedEmailId))
                 .CountAsync();
 
+            // Fraud classification counts
+            model.FraudEmailCount = await _context.ArchivedEmails
+                .CountAsync(e => accountIds.Contains(e.MailAccountId) && e.FraudStatus == Models.FraudClassification.Fraud);
+            model.SuspiciousEmailCount = await _context.ArchivedEmails
+                .CountAsync(e => accountIds.Contains(e.MailAccountId) && e.FraudStatus == Models.FraudClassification.Suspicious);
+            model.NormalEmailCount = model.TotalEmails - model.FraudEmailCount - model.SuspiciousEmailCount;
+
             var totalDatabaseSizeBytes = await GetDatabaseSizeAsync();
             model.TotalStorageUsed = FormatFileSize(totalDatabaseSizeBytes);
 
