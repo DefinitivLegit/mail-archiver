@@ -2464,4 +2464,36 @@
   <data name="DetailsLabel" xml:space="preserve">
     <value>Podrobnosti</value>
   </data>
+  <data name="SyncAllStarted" xml:space="preserve">
+    <value>Hitra sinhronizacija se je začela za {0} račun(ov). Sinhronizacije potekajo vzporedno.</value>
+    <comment>{0} - number of accounts</comment>
+  </data>
+  <data name="ResyncAllStarted" xml:space="preserve">
+    <value>Popolna ponovna sinhronizacija se je začela za {0} račun(ov). Ponovne sinhronizacije potekajo vzporedno.</value>
+    <comment>{0} - number of accounts</comment>
+  </data>
+  <data name="NoAccountsToSync" xml:space="preserve">
+    <value>Ni najdenih ustreznih računov za sinhronizacijo.</value>
+  </data>
+  <data name="QuickSyncAll" xml:space="preserve">
+    <value>Hitra sinhronizacija vseh</value>
+  </data>
+  <data name="FullResyncAll" xml:space="preserve">
+    <value>Popolna ponovna sinhronizacija vseh</value>
+  </data>
+  <data name="OnlyNeverSynced" xml:space="preserve">
+    <value>Samo nikoli sinhronizirani</value>
+  </data>
+  <data name="SyncAllConfirm" xml:space="preserve">
+    <value>Ali ste prepričani, da želite začeti hitro sinhronizacijo za vse omogočene račune?</value>
+  </data>
+  <data name="ResyncAllConfirm" xml:space="preserve">
+    <value>Ali ste prepričani, da želite začeti popolno ponovno sinhronizacijo za vse omogočene račune? To bo znova preneslo vsa e-poštna sporočila.</value>
+  </data>
+  <data name="MaxParallelSyncs" xml:space="preserve">
+    <value>Najv. vzporednih sinhronizacij</value>
+  </data>
+  <data name="SyncAllActions" xml:space="preserve">
+    <value>Sinhroniziraj vse</value>
+  </data>
 </root>

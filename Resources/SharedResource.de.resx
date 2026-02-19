@@ -2465,4 +2465,36 @@
   <data name="ManualSyncTooltip" xml:space="preserve">
     <value>Manuelle Synchronisierung - Konto ist für automatische Synchronisierung deaktiviert</value>
   </data>
+  <data name="SyncAllStarted" xml:space="preserve">
+    <value>Schnellsynchronisierung für {0} Konto(s) gestartet. Synchronisierungen laufen parallel.</value>
+    <comment>{0} - number of accounts</comment>
+  </data>
+  <data name="ResyncAllStarted" xml:space="preserve">
+    <value>Vollständige Neusynchronisierung für {0} Konto(s) gestartet. Neusynchronisierungen laufen parallel.</value>
+    <comment>{0} - number of accounts</comment>
+  </data>
+  <data name="NoAccountsToSync" xml:space="preserve">
+    <value>Keine geeigneten Konten zum Synchronisieren gefunden.</value>
+  </data>
+  <data name="QuickSyncAll" xml:space="preserve">
+    <value>Alle schnell synchronisieren</value>
+  </data>
+  <data name="FullResyncAll" xml:space="preserve">
+    <value>Alle vollständig neu synchronisieren</value>
+  </data>
+  <data name="OnlyNeverSynced" xml:space="preserve">
+    <value>Nur nie synchronisierte</value>
+  </data>
+  <data name="SyncAllConfirm" xml:space="preserve">
+    <value>Sind Sie sicher, dass Sie eine Schnellsynchronisierung für alle aktivierten Konten starten möchten?</value>
+  </data>
+  <data name="ResyncAllConfirm" xml:space="preserve">
+    <value>Sind Sie sicher, dass Sie eine vollständige Neusynchronisierung für alle aktivierten Konten starten möchten? Dadurch werden alle E-Mails erneut heruntergeladen.</value>
+  </data>
+  <data name="MaxParallelSyncs" xml:space="preserve">
+    <value>Max. parallele Synchronisierungen</value>
+  </data>
+  <data name="SyncAllActions" xml:space="preserve">
+    <value>Alle synchronisieren</value>
+  </data>
 </root>

@@ -2464,4 +2464,36 @@
   <data name="DetailsLabel" xml:space="preserve">
     <value>Details</value>
   </data>
+  <data name="SyncAllStarted" xml:space="preserve">
+    <value>Snelle synchronisatie gestart voor {0} account(s). Synchronisaties worden parallel uitgevoerd.</value>
+    <comment>{0} - number of accounts</comment>
+  </data>
+  <data name="ResyncAllStarted" xml:space="preserve">
+    <value>Volledige hersynchronisatie gestart voor {0} account(s). Hersynchronisaties worden parallel uitgevoerd.</value>
+    <comment>{0} - number of accounts</comment>
+  </data>
+  <data name="NoAccountsToSync" xml:space="preserve">
+    <value>Geen geschikte accounts gevonden om te synchroniseren.</value>
+  </data>
+  <data name="QuickSyncAll" xml:space="preserve">
+    <value>Alles snel synchroniseren</value>
+  </data>
+  <data name="FullResyncAll" xml:space="preserve">
+    <value>Alles volledig hersynchroniseren</value>
+  </data>
+  <data name="OnlyNeverSynced" xml:space="preserve">
+    <value>Alleen nooit gesynchroniseerd</value>
+  </data>
+  <data name="SyncAllConfirm" xml:space="preserve">
+    <value>Weet u zeker dat u een snelle synchronisatie wilt starten voor alle ingeschakelde accounts?</value>
+  </data>
+  <data name="ResyncAllConfirm" xml:space="preserve">
+    <value>Weet u zeker dat u een volledige hersynchronisatie wilt starten voor alle ingeschakelde accounts? Dit zal alle e-mails opnieuw downloaden.</value>
+  </data>
+  <data name="MaxParallelSyncs" xml:space="preserve">
+    <value>Max. parallelle synchronisaties</value>
+  </data>
+  <data name="SyncAllActions" xml:space="preserve">
+    <value>Alles synchroniseren</value>
+  </data>
 </root>

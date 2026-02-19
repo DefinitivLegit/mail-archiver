@@ -2464,4 +2464,36 @@
   <data name="DetailsLabel" xml:space="preserve">
     <value>Детали</value>
   </data>
+  <data name="SyncAllStarted" xml:space="preserve">
+    <value>Быстрая синхронизация запущена для {0} аккаунта(ов). Синхронизации выполняются параллельно.</value>
+    <comment>{0} - number of accounts</comment>
+  </data>
+  <data name="ResyncAllStarted" xml:space="preserve">
+    <value>Полная повторная синхронизация запущена для {0} аккаунта(ов). Повторные синхронизации выполняются параллельно.</value>
+    <comment>{0} - number of accounts</comment>
+  </data>
+  <data name="NoAccountsToSync" xml:space="preserve">
+    <value>Не найдено подходящих аккаунтов для синхронизации.</value>
+  </data>
+  <data name="QuickSyncAll" xml:space="preserve">
+    <value>Быстрая синхронизация всех</value>
+  </data>
+  <data name="FullResyncAll" xml:space="preserve">
+    <value>Полная повторная синхронизация всех</value>
+  </data>
+  <data name="OnlyNeverSynced" xml:space="preserve">
+    <value>Только никогда не синхронизированные</value>
+  </data>
+  <data name="SyncAllConfirm" xml:space="preserve">
+    <value>Вы уверены, что хотите запустить быструю синхронизацию для всех включённых аккаунтов?</value>
+  </data>
+  <data name="ResyncAllConfirm" xml:space="preserve">
+    <value>Вы уверены, что хотите запустить полную повторную синхронизацию для всех включённых аккаунтов? Это приведёт к повторной загрузке всех писем.</value>
+  </data>
+  <data name="MaxParallelSyncs" xml:space="preserve">
+    <value>Макс. параллельных синхронизаций</value>
+  </data>
+  <data name="SyncAllActions" xml:space="preserve">
+    <value>Синхронизировать все</value>
+  </data>
 </root>
