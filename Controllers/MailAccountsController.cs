@@ -17,6 +17,7 @@ namespace MailArchiver.Controllers
     [SelfManagerRequired]
     public class MailAccountsController : Controller
     {
+    private static readonly DateTime NeverSyncedEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     private readonly MailArchiverDbContext _context;
     private readonly MailArchiver.Services.Core.EmailCoreService _emailCoreService;
     private readonly MailArchiver.Services.Factories.ProviderEmailServiceFactory _providerFactory;
@@ -153,6 +154,11 @@ namespace MailArchiver.Controllers
                     Provider = a.Provider
                 })
                 .ToListAsync();
+            foreach (var a in accounts)
+            {
+                if (a.LastSync.HasValue && a.LastSync.Value <= NeverSyncedEpoch)
+                    a.LastSync = null;
+            }
 
             _logger.LogInformation("Returning {Count} accounts for user {Username}", accounts.Count, currentUsername);
             return View(accounts);
@@ -185,7 +191,7 @@ var model = new MailAccountViewModel
                 ImapPort = account.ImapPort,
                 Username = account.Username,
                 UseSSL = account.UseSSL,
-                LastSync = account.LastSync,
+                LastSync = account.LastSync <= NeverSyncedEpoch ? null : account.LastSync,
                 IsEnabled = account.IsEnabled,
                 DeleteAfterDays = account.DeleteAfterDays,
                 Provider = account.Provider,
@@ -340,7 +346,7 @@ var model = new MailAccountViewModel
                 Username = account.Username,
                 UseSSL = account.UseSSL,
                 IsEnabled = account.IsEnabled,
-                LastSync = account.LastSync,
+                LastSync = account.LastSync <= NeverSyncedEpoch ? null : account.LastSync,
                 ExcludedFolders = account.ExcludedFolders,
                 DeleteAfterDays = account.DeleteAfterDays,
                 LocalRetentionDays = account.LocalRetentionDays,
@@ -909,7 +915,7 @@ var model = new MailAccountViewModel
 
             if (onlyNeverSynced)
             {
-                accounts = accounts.Where(a => a.LastSync == default).ToList();
+                accounts = accounts.Where(a => a.LastSync == default || a.LastSync == NeverSyncedEpoch).ToList();
             }
 
             if (!accounts.Any())
@@ -1010,7 +1016,7 @@ var model = new MailAccountViewModel
 
             if (onlyNeverSynced)
             {
-                accounts = accounts.Where(a => a.LastSync == default).ToList();
+                accounts = accounts.Where(a => a.LastSync == default || a.LastSync == NeverSyncedEpoch).ToList();
             }
 
             if (!accounts.Any())
